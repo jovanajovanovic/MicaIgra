@@ -1,11 +1,11 @@
-package com.jovo.gui;
+package com.mica.gui;
 
 import java.awt.BorderLayout;
 
 import javax.swing.JFrame;
 
-import com.jovo.main.Controller;
-import com.jovo.main.Stanje;
+import com.mica.main.Controller;
+import com.mica.main.Stanje;
 
 @SuppressWarnings("serial")
 public class GlavniProzor extends JFrame {

@@ -1,4 +1,4 @@
-package com.jovo.main;
+package com.mica.main;
 
 public class QVrednostAkcija {
 	private double qVrednost;

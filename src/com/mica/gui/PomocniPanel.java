@@ -1,4 +1,4 @@
-package com.jovo.gui;
+package com.mica.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -7,10 +7,10 @@ import java.awt.GridLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import com.jovo.main.Controller;
-import com.jovo.main.Igrac;
-import com.jovo.main.Stanje;
-import com.jovo.main.TipPolja;
+import com.mica.main.Controller;
+import com.mica.main.Igrac;
+import com.mica.main.Stanje;
+import com.mica.main.TipPolja;
 
 @SuppressWarnings("serial")
 public class PomocniPanel extends JPanel {

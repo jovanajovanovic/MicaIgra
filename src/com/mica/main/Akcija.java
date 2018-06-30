@@ -1,4 +1,4 @@
-package com.jovo.main;
+package com.mica.main;
 
 public enum Akcija {
 	POSTAVI_0, POSTAVI_1, POSTAVI_2, POSTAVI_3, POSTAVI_4, POSTAVI_5, POSTAVI_6, POSTAVI_7, POSTAVI_8,

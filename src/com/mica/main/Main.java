@@ -1,10 +1,10 @@
-package com.jovo.main;
+package com.mica.main;
 
 import java.util.HashMap;
 
 import javax.swing.JOptionPane;
 
-import com.jovo.gui.GlavniProzor;
+import com.mica.gui.GlavniProzor;
 
 public class Main {
 

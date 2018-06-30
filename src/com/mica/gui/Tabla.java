@@ -1,4 +1,4 @@
-package com.jovo.gui;
+package com.mica.gui;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -13,9 +13,9 @@ import java.util.HashMap;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-import com.jovo.main.Controller;
-import com.jovo.main.Pozicija;
-import com.jovo.main.TipPolja;
+import com.mica.main.Controller;
+import com.mica.main.Pozicija;
+import com.mica.main.TipPolja;
 
 @SuppressWarnings("serial")
 public class Tabla extends JPanel implements MouseListener {

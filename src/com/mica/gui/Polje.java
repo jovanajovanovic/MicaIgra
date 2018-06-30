@@ -1,9 +1,9 @@
-package com.jovo.gui;
+package com.mica.gui;
 
 import java.awt.Point;
 
-import com.jovo.main.Pozicija;
-import com.jovo.main.TipPolja;
+import com.mica.main.Pozicija;
+import com.mica.main.TipPolja;
 
 public class Polje {
 	private Pozicija pozicija;

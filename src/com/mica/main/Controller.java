@@ -1,11 +1,11 @@
-package com.jovo.main;
+package com.mica.main;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
-import com.jovo.gui.Polje;
-import com.jovo.gui.PomocniPanel;
+import com.mica.gui.Polje;
+import com.mica.gui.PomocniPanel;
 
 public class Controller {
 	public static final int BROJ_KRUGOVA = 3;

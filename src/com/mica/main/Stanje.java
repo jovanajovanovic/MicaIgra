@@ -1,6 +1,6 @@
-package com.jovo.main;
+package com.mica.main;
 
-import com.jovo.gui.Polje;
+import com.mica.gui.Polje;
 
 public class Stanje {
 	private Polje[][] polja;
