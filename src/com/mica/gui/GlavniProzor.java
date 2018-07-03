@@ -24,10 +24,10 @@ public class GlavniProzor extends JFrame {
 	    setExtendedState(JFrame.MAXIMIZED_BOTH);
 	        
 	    tabla = new Tabla(controller);
+	    controller.setTabla(tabla);
 	    
 	    pomocniPanel = new PomocniPanel();
 	    controller.setPomocniPanel(pomocniPanel);
-	    
 	    
 	    Stanje trenutnoStanje = controller.getTrenutnoStanje();
 	    pomocniPanel.setNaPotezu(trenutnoStanje.getIgracNaPotezu());
@@ -40,6 +40,9 @@ public class GlavniProzor extends JFrame {
 		getContentPane().add(pomocniPanel, BorderLayout.EAST);
 		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
+		controller.boteOdigrajPotez();
+		tabla.refresh();
 	}
 
 	public Controller getController() {

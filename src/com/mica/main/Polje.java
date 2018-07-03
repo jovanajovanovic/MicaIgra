@@ -1,9 +1,8 @@
-package com.mica.gui;
+package com.mica.main;
 
 import java.awt.Point;
 
-import com.mica.main.Pozicija;
-import com.mica.main.TipPolja;
+import com.mica.gui.Tabla;
 
 public class Polje {
 	private Pozicija pozicija;
@@ -60,14 +59,26 @@ public class Polje {
 	@Override
 	public boolean equals(Object obj) {
 		if(obj instanceof Polje) {
-			return pozicija.equals(((Polje)obj).pozicija);
+			Polje polje = (Polje) obj;
+			return pozicija.equals(polje.pozicija) && daLiJeUTari == polje.daLiJeUTari && tipPolja == polje.tipPolja;
 		}
 		
 		return false;
 	}
 	
 	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (daLiJeUTari ? 1231 : 1237);
+		result = prime * result + ((pozicija == null) ? 0 : pozicija.hashCode());
+		result = prime * result + ((tipPolja == null) ? 0 : tipPolja.hashCode());
+		return result;
+	}
+	
+	@Override
 	public String toString() {
 		return tipPolja.name() + "," + daLiJeUTari; 
 	}
+
 }

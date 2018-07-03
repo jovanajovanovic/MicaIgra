@@ -26,6 +26,15 @@ public class StanjeAkcija {
 	}
 	
 	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((akcija == null) ? 0 : akcija.hashCode());
+		result = prime * result + ((stanje == null) ? 0 : stanje.hashCode());
+		return result;
+	}
+
+	@Override
 	public boolean equals(Object obj) {
 		if(obj instanceof StanjeAkcija) {
 			StanjeAkcija sa = (StanjeAkcija) obj;
@@ -35,7 +44,7 @@ public class StanjeAkcija {
 		
 		return false;
 	}
-	
+
 	@Override
 	public String toString() {
 		return stanje + "|" + akcija.name();
