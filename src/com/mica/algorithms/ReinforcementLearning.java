@@ -9,6 +9,7 @@ import javax.swing.JOptionPane;
 import com.mica.main.Akcija;
 import com.mica.main.Akcije;
 import com.mica.main.Controller;
+import com.mica.main.Igrac;
 import com.mica.main.Polje;
 import com.mica.main.PoljeAkcija;
 import com.mica.main.Potez;
@@ -28,6 +29,7 @@ public class ReinforcementLearning {
 	private Random random = new Random();
 
 	public ReinforcementLearning() {
+		System.out.println("Malo strpljenja...");
 		this.qVrednosti = RadSaPodacima.ucitajStanjaAkcijeIQVrednostiIzFajla();
 		this.brojMenjanjaQVrednosti = RadSaPodacima.ucitajStanjaAkcijeIBrojIzmenaIzFajla();
 		
@@ -39,6 +41,8 @@ public class ReinforcementLearning {
 			this.brojMenjanjaQVrednosti = new HashMap<StanjeAkcija, Integer>();
 			JOptionPane.showMessageDialog(null, "Problem sa ucitavanjem podataka - brojMenjanjaQVrednosti!", "Greska", JOptionPane.ERROR_MESSAGE);
 		}
+		
+		System.out.println("Spreman!");
 		
 		this.epsilon = 0.3;
 	}
@@ -68,24 +72,49 @@ public class ReinforcementLearning {
 		
 		Polje[][] polja = stanje.getPolja();
 		Polje selektovanoPolje;
-		int indeksAkcijePostavljanja;
+		int indeksAkcije;
+		
+		Igrac igrac;
+		TipPolja tipPoljaZaJedenje;
+        if(stanje.getIgracNaPotezu() == TipPolja.PLAVO) {
+        	igrac = stanje.getPlaviIgrac();
+        	tipPoljaZaJedenje = TipPolja.CRVENO;
+        }
+        else {
+        	igrac = stanje.getCrveniIgrac();
+        	tipPoljaZaJedenje = TipPolja.PLAVO;
+        }
 			 
+        boolean postavljene = stanje.daLiSuSveFigurePostavljene();
+        
+        boolean sveFigureUTarama = stanje.daLiSuSvaProtivnickaPoljaUTari(tipPoljaZaJedenje);
+        
 		for (int i = 0; i < Controller.BROJ_KRUGOVA; i++) {
 			for (int j = 0; j < Controller.BROJ_POLJA_U_KRUGU; j++) {
 				selektovanoPolje = polja[i][j];
 				
-				if(stanje.daLiSuSveFigurePostavljene()) {
-					if(selektovanoPolje.getTipPolja() == stanje.getIgracNaPotezu()) {
-						if(stanje.getPlaviIgrac().getBrojPreostalihFigura() == 3) {
-							proveriDaLiSuSkokoviMoguci(stanje.getPolja(), mogucaSelektovanaPoljaIAkcije, selektovanoPolje);
-						}
-						proveriDaLiSuGDLDAkcijeMoguce(stanje.getPolja(), mogucaSelektovanaPoljaIAkcije, selektovanoPolje);
+				if (stanje.isPojedi()) {
+					if(selektovanoPolje.getTipPolja() != stanje.getIgracNaPotezu() && selektovanoPolje.getTipPolja() != TipPolja.ZUTO) {
+						if(!sveFigureUTarama && selektovanoPolje.isDaLiJeUTari()) continue;
+						
+						indeksAkcije = selektovanoPolje.getPozicija().getX()*Controller.BROJ_POLJA_U_KRUGU + selektovanoPolje.getPozicija().getY();
+						mogucaSelektovanaPoljaIAkcije.add(new PoljeAkcija(selektovanoPolje, Akcije.JEDENJE[indeksAkcije]));
 					}
-				}
+				} 
 				else {
-					if(selektovanoPolje.getTipPolja() == TipPolja.ZUTO) {
-						indeksAkcijePostavljanja = selektovanoPolje.getPozicija().getX()*Controller.BROJ_POLJA_U_KRUGU + selektovanoPolje.getPozicija().getY();
-						mogucaSelektovanaPoljaIAkcije.add(new PoljeAkcija(selektovanoPolje, Akcije.POSTAVLJANJE[indeksAkcijePostavljanja]));
+					if(postavljene) {
+						if(selektovanoPolje.getTipPolja() == stanje.getIgracNaPotezu()) {
+							if(igrac.getBrojPreostalihFigura() == 3) {
+								proveriDaLiSuSkokoviMoguci(stanje.getPolja(), mogucaSelektovanaPoljaIAkcije, selektovanoPolje);
+							}
+							proveriDaLiSuGDLDAkcijeMoguce(stanje.getPolja(), mogucaSelektovanaPoljaIAkcije, selektovanoPolje);
+						}
+					}
+					else {
+						if(selektovanoPolje.getTipPolja() == TipPolja.ZUTO) {
+							indeksAkcije = selektovanoPolje.getPozicija().getX()*Controller.BROJ_POLJA_U_KRUGU + selektovanoPolje.getPozicija().getY();
+							mogucaSelektovanaPoljaIAkcije.add(new PoljeAkcija(selektovanoPolje, Akcije.POSTAVLJANJE[indeksAkcije]));
+						}
 					}
 				}
 				
@@ -151,7 +180,7 @@ public class ReinforcementLearning {
 	
 	public void postaviNovuQVrednost(Stanje stanje, Akcija akcija, Stanje sledeceStanje, double nagrada) {
 		StanjeAkcija stanjeAkcija = new StanjeAkcija(stanje, akcija);
-		System.out.println(stanjeAkcija.hashCode());
+		
 		double alfa;
 		Integer n = this.brojMenjanjaQVrednosti.get(stanjeAkcija);
 		if(n == null) {
@@ -162,11 +191,15 @@ public class ReinforcementLearning {
 			alfa = 1 / n;
 		}
 		
+		// gledamo potez u napred
 		ArrayList<PoljeAkcija> mogucaSelektovanaPoljaIAkcije = getMogucaSelektovanaPoljaIAkcijeZaDatoStanje(sledeceStanje);
 		QVrednostSelektovanoPoljeAkcija maksimumQVrednostSelektovanoPoljeAkcija = izracunajNajboljuAkcijuPoQvrednostima(sledeceStanje, mogucaSelektovanaPoljaIAkcije);
-		double novaQVrednost = (1 - alfa) * getQVrednost(stanje, akcija) + alfa * (nagrada + this.zanemarivanje*maksimumQVrednostSelektovanoPoljeAkcija.getqVrednost());
+		double novaQVrednost = (1 - alfa) * getQVrednost(stanjeAkcija) + alfa * (nagrada + this.zanemarivanje*maksimumQVrednostSelektovanoPoljeAkcija.getqVrednost());
 
 		this.qVrednosti.put(stanjeAkcija, novaQVrednost);
+		if(this.brojMenjanjaQVrednosti.containsKey(stanjeAkcija)) {
+			System.out.println("Izmenjeno brojMenjanjaQVrednosti!");
+		}
 		this.brojMenjanjaQVrednosti.put(stanjeAkcija, n+1);
 	}
 		
@@ -175,9 +208,19 @@ public class ReinforcementLearning {
 		double qVrednost;
         PoljeAkcija maksimumSelektovanoPoljeAkcija = null;
 
+        Igrac igrac;
+        if(stanje.getIgracNaPotezu() == TipPolja.PLAVO) {
+        	igrac = stanje.getPlaviIgrac();
+        }
+        else {
+        	igrac = stanje.getCrveniIgrac();
+        }
+        
+        Stanje kopijaStanja = new Stanje(stanje);
+        
         for(PoljeAkcija selektovanoPoljeAkcija : mogucaSelektovanaPoljaIAkcije) {
-        	stanje.getPlaviIgrac().setSelektovanoPolje(selektovanoPoljeAkcija.getPolje());
-        	qVrednost = getQVrednost(stanje, selektovanoPoljeAkcija.getAkcija());
+        	igrac.setSelektovanoPolje(selektovanoPoljeAkcija.getPolje());
+        	qVrednost = getQVrednost(new StanjeAkcija(kopijaStanja, selektovanoPoljeAkcija.getAkcija()));
             if (qVrednost > maksimumQVrednost) {
             	maksimumQVrednost = qVrednost;
             	maksimumSelektovanoPoljeAkcija = selektovanoPoljeAkcija;
@@ -188,13 +231,83 @@ public class ReinforcementLearning {
         return new QVrednostSelektovanoPoljeAkcija(maksimumQVrednost, maksimumSelektovanoPoljeAkcija);
 	}
 
-	public double getQVrednost(Stanje stanje, Akcija akcija) {
-		StanjeAkcija key = new StanjeAkcija(stanje, akcija);
+	public double getQVrednost(StanjeAkcija key) {
 		
 		if(this.qVrednosti.containsKey(key)) {
 			System.out.println("Pronasao vec postojecu qvrednost");
 			return this.qVrednosti.get(key);
 		}
+		
+		key.getStanje().promeniIgracNaPotezuIgraceIBojeFigurama();
+		
+		if(this.qVrednosti.containsKey(key)) {
+			System.out.println("Promenjena boja nad obicnim stanjem");
+			return this.qVrednosti.get(key);
+		}
+		
+		key.getStanje().promeniIgracNaPotezuIgraceIBojeFigurama(); // vrati na staro
+		key.getStanje().horizontalnaOsnaSimetrija();
+	
+		if(this.qVrednosti.containsKey(key)) {
+			System.out.println("Horizontalna osna simetrija");
+			return this.qVrednosti.get(key);
+		}
+		
+		key.getStanje().promeniIgracNaPotezuIgraceIBojeFigurama();
+		
+		if(this.qVrednosti.containsKey(key)) {
+			System.out.println("Horizontalna osna simetrija i promenjena boja");
+			return this.qVrednosti.get(key);
+		}
+		
+		key.getStanje().promeniIgracNaPotezuIgraceIBojeFigurama(); // vrati na staro
+		key.getStanje().horizontalnaOsnaSimetrija(); // vrati na staro
+		key.getStanje().vertikalnaOsnaSimetrija();
+		
+		if(this.qVrednosti.containsKey(key)) {
+			System.out.println("Vertikalna osna simetrija");
+			return this.qVrednosti.get(key);
+		}
+		
+		key.getStanje().promeniIgracNaPotezuIgraceIBojeFigurama();
+		if(this.qVrednosti.containsKey(key)) {
+			System.out.println("Vertikalna osna simetrija i promenjena boja");
+			return this.qVrednosti.get(key);
+		}
+		key.getStanje().promeniIgracNaPotezuIgraceIBojeFigurama(); // vrati na staro
+		key.getStanje().vertikalnaOsnaSimetrija(); // vrati na staro
+		key.getStanje().gornjiLeviDonjiDesniKosaOsnaSimetrija();
+		
+		if(this.qVrednosti.containsKey(key)) {
+			System.out.println("Gornji levi donji desni kosa osna simetrija");
+			return this.qVrednosti.get(key);
+		}
+		
+		key.getStanje().promeniIgracNaPotezuIgraceIBojeFigurama();
+		
+		if(this.qVrednosti.containsKey(key)) {
+			System.out.println("Gornji levi donji desni kosa osna simetrija i promenjena boja");
+			return this.qVrednosti.get(key);
+		}
+		
+		key.getStanje().promeniIgracNaPotezuIgraceIBojeFigurama(); // vrati na staro
+		key.getStanje().gornjiLeviDonjiDesniKosaOsnaSimetrija(); // vrati na staro
+		key.getStanje().gornjiDesniDonjiLeviKosaOsnaSimetrija();
+		
+		if(this.qVrednosti.containsKey(key)) {
+			System.out.println("Gornji desni donji levi kosa osna simetrija");
+			return this.qVrednosti.get(key);
+		}
+		
+		key.getStanje().promeniIgracNaPotezuIgraceIBojeFigurama();
+		
+		if(this.qVrednosti.containsKey(key)) {
+			System.out.println("Gornji desni donji levi kosa osna simetrija i promenjena boja");
+			return this.qVrednosti.get(key);
+		}
+		
+		key.getStanje().promeniIgracNaPotezuIgraceIBojeFigurama(); // vrati na staro
+		key.getStanje().gornjiDesniDonjiLeviKosaOsnaSimetrija(); // vrati na staro
 		
 		return 0;
 	}
@@ -203,12 +316,14 @@ public class ReinforcementLearning {
 		Polje[][] polja = stanje.getPolja();
 		
 		PoljeAkcija selektovanoPoljeAkcija = getSelektovanoPoljeIAkcija(stanje);
+		if(selektovanoPoljeAkcija == null) return null;
+		
 		Akcija akcija = selektovanoPoljeAkcija.getAkcija();
 		String akcijaName = akcija.name();
 		Polje polje;
 		Polje selektovanoPolje;
 		
-		if(akcijaName.contains("POSTAVI")) {
+		if(stanje.isPojedi() || akcijaName.contains("POSTAVI")) {
 			selektovanoPolje = null;
 			polje = selektovanoPoljeAkcija.getPolje();
 		}

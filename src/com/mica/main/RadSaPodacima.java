@@ -4,6 +4,9 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 
 import javax.swing.JOptionPane;
@@ -43,8 +46,7 @@ public class RadSaPodacima {
 			String linija;
 			String[] tokeni;
 			String[] tokeniStanje;
-			
-			System.out.println("Hashcode:");
+		
 			
 			while((linija = br.readLine()) != null) {
 				linija = linija.trim();
@@ -59,10 +61,10 @@ public class RadSaPodacima {
 					
 					Stanje stanje = Stanje.kreirajStanje(tokeniStanje);
 					if(stanje == null) return null;
+					stanje.podesiPoljaUTaramaIVanNjih();
 					
 					Akcija akcija = Akcija.valueOf(tokeni[1]);
 					StanjeAkcija sa = new StanjeAkcija(stanje, akcija);
-					System.out.println(sa.hashCode());
 					double qVrednost = Double.parseDouble(tokeni[2]);
 					qVrednosti.put(sa, qVrednost);
 					
@@ -143,17 +145,16 @@ public class RadSaPodacima {
 	}
 	
 	
-	public static void upisiPobednikaUFajl(String pobednik) {
+	public static void upisiKrajnjiRezultatUFajl(Rezultat rezultat) {
 		try {
-			PrintWriter pw = new PrintWriter(new FileWriter(nazivFajlaZaRezultate));
+			String tekstZaUpis = "POBEDNIK: " + rezultat.getPobednik() + ", " + rezultat.getAlgoritamPobednika() 
+			+ "  |  GUBITNIK: " + rezultat.getGubitnik() + ", " + rezultat.getAlgoritamGubitnika() + "  |  BROJ_POTEZA: " + rezultat.getBrojPoteza() +"\n";
 			
-			pw.append(pobednik + " pobedio\n");
-			
-			pw.close();
-		}
-		catch(Exception e) {
+		    Files.write(Paths.get(nazivFajlaZaRezultate), tekstZaUpis.getBytes(), StandardOpenOption.APPEND);
+		}catch (Exception e) {
 			JOptionPane.showMessageDialog(null, "Problem sa rezultatima!", "Greska", JOptionPane.ERROR_MESSAGE);
 		}
-
+		
 	}
+	
 }

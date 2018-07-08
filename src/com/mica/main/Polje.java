@@ -78,7 +78,7 @@ public class Polje {
 	
 	@Override
 	public String toString() {
-		return tipPolja.name() + "," + daLiJeUTari; 
+		return "" + tipPolja.ordinal(); 
 	}
 
 }

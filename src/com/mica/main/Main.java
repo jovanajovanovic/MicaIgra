@@ -9,6 +9,9 @@ public class Main {
 		Controller con = new Controller(igracNaPotezu);
 		GlavniProzor gp = new GlavniProzor(con);
 		gp.setVisible(true);
+		
+		//con.zapocniNovuIgru();
+		con.dialogPocetni(null);
 
 	}
 

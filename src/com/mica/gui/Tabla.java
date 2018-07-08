@@ -10,13 +10,15 @@ import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
+import com.mica.main.Algoritam;
 import com.mica.main.Controller;
+import com.mica.main.Igrac;
 import com.mica.main.Polje;
 import com.mica.main.Pozicija;
 import com.mica.main.RadSaPodacima;
+import com.mica.main.Rezultat;
 import com.mica.main.Stanje;
 import com.mica.main.TipPolja;
 
@@ -65,8 +67,17 @@ public class Tabla extends JPanel implements MouseListener {
     protected void paintComponent(Graphics g) {
 		Stanje trenutnoStanje = controller.getTrenutnoStanje();
 		Polje[][] polja = trenutnoStanje.getPolja();
-		Polje crvenoSelektovanoPolje = trenutnoStanje.getCrveniIgrac().getSelektovanoPolje();
-		Polje plavoSelektovanoPolje = trenutnoStanje.getPlaviIgrac().getSelektovanoPolje();
+		
+		Igrac plaviIgrac = trenutnoStanje.getPlaviIgrac();
+		Igrac crveniIgrac = trenutnoStanje.getCrveniIgrac();
+		
+		Polje plavoSelektovanoPolje;
+		if(plaviIgrac.getAlgoritam() != Algoritam.COVEK) plavoSelektovanoPolje = null;
+		else plavoSelektovanoPolje = plaviIgrac.getSelektovanoPolje();
+		
+		Polje crvenoSelektovanoPolje;
+		if(crveniIgrac.getAlgoritam() != Algoritam.COVEK) crvenoSelektovanoPolje = null;
+		else crvenoSelektovanoPolje = crveniIgrac.getSelektovanoPolje();
 		
         super.paintComponent(g);
         
@@ -116,12 +127,12 @@ public class Tabla extends JPanel implements MouseListener {
 							g2.fillOval(koordinatePolja.getX() - POLUPRECNIK_POLJA/2, koordinatePolja.getY() - POLUPRECNIK_POLJA/2, 3*POLUPRECNIK_POLJA, 3*POLUPRECNIK_POLJA);
 						}
 					}
-					/*if(plavoSelektovanoPolje != null) {
+					if(plavoSelektovanoPolje != null) {
 						if (plavoSelektovanoPolje.equals(polje)) {
 							g2.setColor(Color.PINK);
 							g2.fillOval(koordinatePolja.getX() - POLUPRECNIK_POLJA/2, koordinatePolja.getY() - POLUPRECNIK_POLJA/2, 3*POLUPRECNIK_POLJA, 3*POLUPRECNIK_POLJA);
 						}
-					}*/
+					}
 					g2.setColor(boje[polje.getTipPolja().ordinal()]);
 					g2.fillOval(koordinatePolja.getX(), koordinatePolja.getY(), 2*POLUPRECNIK_POLJA, 2*POLUPRECNIK_POLJA);
 				}
@@ -216,7 +227,16 @@ public class Tabla extends JPanel implements MouseListener {
 	@Override
 	public void mouseReleased(MouseEvent e) {
 		Stanje trenutnoStanje = controller.getTrenutnoStanje();
-		Polje selektovanoPolje = trenutnoStanje.getCrveniIgrac().getSelektovanoPolje();
+		Polje selektovanoPolje;
+		
+		if(trenutnoStanje.getIgracNaPotezu() == TipPolja.PLAVO) {
+			if(trenutnoStanje.getPlaviIgrac().getAlgoritam() != Algoritam.COVEK) return;
+			selektovanoPolje = trenutnoStanje.getPlaviIgrac().getSelektovanoPolje();
+		}
+		else {
+			if(trenutnoStanje.getCrveniIgrac().getAlgoritam() != Algoritam.COVEK) return;
+			selektovanoPolje = trenutnoStanje.getCrveniIgrac().getSelektovanoPolje();
+		}
 		
 		Polje polje = getPoljeOnClicked(e.getPoint()); 
 		if(polje != null) {
@@ -225,8 +245,8 @@ public class Tabla extends JPanel implements MouseListener {
 				return;
 			}*/
 			
-			if(controller.isPojediPlavog() || controller.isPojediCrvenog()) {
-				controller.pojediFiguru(polje);
+			if(trenutnoStanje.isPojedi()) {
+				controller.izvrsiJedenjeFigure(trenutnoStanje, polje, true);
 			}
 			else {
 				if(trenutnoStanje.daLiSuSveFigurePostavljene()) {
@@ -235,7 +255,8 @@ public class Tabla extends JPanel implements MouseListener {
 							if(controller.daLiJeIspravanPotez(selektovanoPolje.getPozicija(), polje.getPozicija())) {
 								if(selektovanoPolje.getTipPolja() != TipPolja.ZUTO) {
 									if(polje.getTipPolja() == TipPolja.ZUTO) {
-										controller.napraviPotez(polje, selektovanoPolje);
+										controller.napraviPotez(trenutnoStanje, polje, selektovanoPolje, true);
+										controller.setPotezNapravljen(true);
 										//controller.noviPotez();
 										//controller.setProveriKrajIgre(true);
 										//refresh();
@@ -247,12 +268,18 @@ public class Tabla extends JPanel implements MouseListener {
 						
 					} 
 					
-					trenutnoStanje.getCrveniIgrac().setSelektovanoPolje(polje);
+					if(trenutnoStanje.getIgracNaPotezu() == TipPolja.PLAVO) {
+						trenutnoStanje.getPlaviIgrac().setSelektovanoPolje(polje);
+					}
+					else {
+						trenutnoStanje.getCrveniIgrac().setSelektovanoPolje(polje);
+					}
 					
 				}
 				else {
 					if(polje.getTipPolja() == TipPolja.ZUTO) {
-						controller.napraviPotez(polje, null);
+						controller.napraviPotez(trenutnoStanje, polje, null, true);
+						controller.setPotezNapravljen(true);
 						//controller.noviPotez();
 					}
 					
@@ -282,18 +309,15 @@ public class Tabla extends JPanel implements MouseListener {
 			if(controller.isProveriKrajIgre()) {
 				controller.setProveriKrajIgre(false);
 				
-				String pobednik = trenutnoStanje.krajIgre();
-				if(pobednik != null) {
-					RadSaPodacima.upisiPobednikaUFajl(pobednik);
-					RadSaPodacima.sacuvajStanjaAkcijeIQVrednostiUFajl(controller.getReinforcementLearning().getqVrednosti());
-					RadSaPodacima.sacuvajStanjaAkcijeIBrojIzmenaUFajl(controller.getReinforcementLearning().getBrojMenjanjaQVrednosti());
+				Rezultat rezultat = trenutnoStanje.krajIgre();
+				if(rezultat != null) {
+					rezultat.setBrojPoteza(controller.getBrojPoteza());
+					RadSaPodacima.upisiKrajnjiRezultatUFajl(rezultat);
+					//RadSaPodacima.sacuvajStanjaAkcijeIQVrednostiUFajl(controller.getReinforcementLearning().getqVrednosti());
+					//RadSaPodacima.sacuvajStanjaAkcijeIBrojIzmenaUFajl(controller.getReinforcementLearning().getBrojMenjanjaQVrednosti());
 					
-					int res = JOptionPane.showConfirmDialog(null, pobednik + " je pobednik! Želite li da igrate novu igru?", "Kraj igre", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
-					if(res == JOptionPane.YES_OPTION) {
-						//resetujTabluZaNovuIgru();
-						controller.resetujSveZaNovuIgru();
-						refresh();
-					}
+					String poruka = rezultat.getPobednik() + " (" + rezultat.getAlgoritamPobednika()  + ") je pobednik!";
+				    controller.dialogPocetni(poruka);
 					
 					return;
 					//controller.setPotezNapravljen(false); // ovo postavljamo 
@@ -301,16 +325,30 @@ public class Tabla extends JPanel implements MouseListener {
 				
 			}
 			
-			if(!controller.isPojediPlavog() && !controller.isPojediCrvenog()) {
+			if(controller.isPotezNapravljen() && !trenutnoStanje.isPojedi()) {
+				controller.setPotezNapravljen(false);
+				
 				Thread t = new Thread(new Runnable() {
 					
 					@Override
 					public void run() {
 						//controller.noviPotez();
-						try { Thread.sleep(2000); } catch (InterruptedException e) {} // na pocetku sacekaj 2 sec
+						Algoritam algoritam;
+						if(trenutnoStanje.getIgracNaPotezu() == TipPolja.PLAVO) {
+							algoritam = trenutnoStanje.getPlaviIgrac().getAlgoritam();
+							controller.uvecajBrojPoteza();
+						}
+						else {
+							algoritam = trenutnoStanje.getCrveniIgrac().getAlgoritam();
+						}
 						
-						// sad je bot na redu da odigra
-						controller.boteOdigrajPotez();
+						if (algoritam != Algoritam.COVEK) {
+							try { Thread.sleep(2000); } catch (InterruptedException e) {} // na pocetku sacekaj 2 sec
+							
+							// sad je bot na redu da odigra
+							controller.boteOdigrajPotez(algoritam);
+						}
+						
 					}
 				});
 				t.start();
@@ -319,7 +357,13 @@ public class Tabla extends JPanel implements MouseListener {
 			
 		}
 		else {
-			trenutnoStanje.getCrveniIgrac().setSelektovanoPolje(null);
+			if(trenutnoStanje.getIgracNaPotezu() == TipPolja.PLAVO) {
+				trenutnoStanje.getPlaviIgrac().setSelektovanoPolje(null);
+			}
+			else {
+				trenutnoStanje.getCrveniIgrac().setSelektovanoPolje(null);
+			}
+			
 		}
 		
 	}

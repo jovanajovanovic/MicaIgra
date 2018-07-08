@@ -24,6 +24,8 @@ public class PomocniPanel extends JPanel {
 	
 	private JLabel pojediLabel;
 	
+	private JLabel brojPreostalihPartijaLabel;
+	
 	private Controller controller;
 	
 	
@@ -41,7 +43,7 @@ public class PomocniPanel extends JPanel {
 		this.brojPlavihPreostalihFigura = new JLabel();
 		this.brojPlavihPreostalihFigura.setForeground(Color.BLUE);
 		
-		JPanel northPanel = new JPanel(new GridLayout(12, 1));
+		JPanel northPanel = new JPanel(new GridLayout(15, 1));
 		
 		northPanel.add(new JLabel("    "));
 		northPanel.add(new JLabel("    "));
@@ -64,6 +66,13 @@ public class PomocniPanel extends JPanel {
 		pojediLabel = new JLabel();
 		pojediLabel.setVisible(false);
 		northPanel.add(pojediLabel);
+		
+		northPanel.add(new JLabel("    "));
+		northPanel.add(new JLabel("    "));
+		
+		brojPreostalihPartijaLabel = new JLabel();
+		brojPreostalihPartijaLabel.setVisible(false);
+		northPanel.add(brojPreostalihPartijaLabel);
 		
 		add(northPanel, BorderLayout.NORTH);
 	}
@@ -100,6 +109,22 @@ public class PomocniPanel extends JPanel {
 		pojediLabel.setText("Pojedite jednu " + figuraZaJedenje + " figuru!");
 	}
 	
+	public JLabel getBrojPreostalihPartijaLabel() {
+		return brojPreostalihPartijaLabel;
+	}
+
+	public void setBrojPreostalihPartijaLabel(int brojPartija) {
+		brojPreostalihPartijaLabel.setText("Broj preostalih partija (trening): " + brojPartija);
+	}
+	
+	public void prikaziBrojPreostalihPartijaLabel() {
+		brojPreostalihPartijaLabel.setVisible(true);
+	}
+	
+	public void ukloniBrojPreostalihPartijaLabel() {
+		brojPreostalihPartijaLabel.setVisible(false);
+	}
+
 	public Controller getController() {
 		return controller;
 	}
