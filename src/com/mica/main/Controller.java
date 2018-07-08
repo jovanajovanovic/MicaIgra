@@ -230,13 +230,18 @@ public class Controller {
 	private Potez odigrajPotezMiniMax(Stanje trenutnoStanje, boolean b) {
 		// mini max algoritam 
 		Igrac igra = null;
+		Igrac protivnik = null;
 		if(trenutnoStanje.getIgracNaPotezu() == TipPolja.PLAVO){
 			igra =  trenutnoStanje.getPlaviIgrac();
+			protivnik = trenutnoStanje.getCrveniIgrac();
 		}else {
 			igra = trenutnoStanje.getCrveniIgrac();
+			protivnik = trenutnoStanje.getPlaviIgrac();
 		}
-		this.miniMaxAlgoritam.setDubinaStabla(5);
+		this.miniMaxAlgoritam.setDubinaStabla(4);
 		this.miniMaxAlgoritam.setIgrac(igra);
+		//this.miniMaxAlgoritam.setProtivnik(protivnik);
+		
 		Potez potez =  miniMaxAlgoritam.noviPotez(trenutnoStanje);
 		if(potez == null){return null;}
 		napraviPotez(trenutnoStanje, potez.getPolje(), potez.getSelektovanoPolje(), b);
@@ -253,6 +258,19 @@ public class Controller {
 	
 	private void pojediMinFiguru(Stanje trenutnoStanje2, boolean b) {
 		//jedenje figure minimax algoritam 
+		Igrac igra = null;
+		Igrac protivnik = null;
+		if(trenutnoStanje.getIgracNaPotezu() == TipPolja.PLAVO){
+			igra =  trenutnoStanje.getPlaviIgrac();
+			protivnik = trenutnoStanje.getCrveniIgrac();
+		}else {
+			igra = trenutnoStanje.getCrveniIgrac();
+			protivnik = trenutnoStanje.getPlaviIgrac();
+		}
+		this.miniMaxAlgoritam.setDubinaStabla(4);
+		this.miniMaxAlgoritam.setIgrac(igra);
+		this.miniMaxAlgoritam.setProtivnik(protivnik);
+		
 		
 		Potez potez = miniMaxAlgoritam.noviPotezJediFiguru(trenutnoStanje2);
 		if(potez != null) {	
