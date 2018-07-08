@@ -313,8 +313,11 @@ public class Tabla extends JPanel implements MouseListener {
 				if(rezultat != null) {
 					rezultat.setBrojPoteza(controller.getBrojPoteza());
 					RadSaPodacima.upisiKrajnjiRezultatUFajl(rezultat);
-					//RadSaPodacima.sacuvajStanjaAkcijeIQVrednostiUFajl(controller.getReinforcementLearning().getqVrednosti());
-					//RadSaPodacima.sacuvajStanjaAkcijeIBrojIzmenaUFajl(controller.getReinforcementLearning().getBrojMenjanjaQVrednosti());
+					
+					if(trenutnoStanje.getPlaviIgrac().getAlgoritam() == Algoritam.RL || trenutnoStanje.getCrveniIgrac().getAlgoritam() == Algoritam.RL) {
+						RadSaPodacima.sacuvajStanjaAkcijeIQVrednostiUFajl(controller.getReinforcementLearning().getqVrednosti());
+						RadSaPodacima.sacuvajStanjaAkcijeIBrojIzmenaUFajl(controller.getReinforcementLearning().getBrojMenjanjaQVrednosti());
+					}
 					
 					String poruka = rezultat.getPobednik() + " (" + rezultat.getAlgoritamPobednika()  + ") je pobednik!";
 				    controller.dialogPocetni(poruka);

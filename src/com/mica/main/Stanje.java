@@ -13,10 +13,10 @@ public class Stanje {
 	
 	private double score;
 	
-	private final double konstantaZaMojeTare = 18;
+	private final double konstantaZaMojeTare = 15;
 	private final double konstantaZaProtivnikoveTare = 18;
-	private final double konstantaZaMojePoluTare = 10;
-	private final double konstantaZaProtivnikovePoluTare = 7;
+	private final double konstantaZaMojePoluTare = 7;
+	private final double konstantaZaProtivnikovePoluTare = 10;
 	
 	private final double konstantaZaKrajIgre = 1000;
 	
@@ -174,6 +174,10 @@ public class Stanje {
 		
 		// Ako su mu preostale 3 figure, sigurno se moze mrdati, jer moze da skace, pa zato necemo nastaviti proveru
 		if(igrac.getBrojPreostalihFigura() == 3) {
+			return null;
+		}
+		
+		if(plaviIgrac.getBrojNepostavljenihFigura() == Controller.BROJ_FIGURA && crveniIgrac.getBrojNepostavljenihFigura() == Controller.BROJ_FIGURA) {
 			return null;
 		}
 		

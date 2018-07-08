@@ -44,7 +44,7 @@ public class ReinforcementLearning {
 		
 		System.out.println("Spreman!");
 		
-		this.epsilon = 0.3;
+		this.epsilon = 0.1;
 	}
 	
 	public HashMap<StanjeAkcija, Double> getqVrednosti() {
@@ -194,13 +194,16 @@ public class ReinforcementLearning {
 		// gledamo potez u napred
 		ArrayList<PoljeAkcija> mogucaSelektovanaPoljaIAkcije = getMogucaSelektovanaPoljaIAkcijeZaDatoStanje(sledeceStanje);
 		QVrednostSelektovanoPoljeAkcija maksimumQVrednostSelektovanoPoljeAkcija = izracunajNajboljuAkcijuPoQvrednostima(sledeceStanje, mogucaSelektovanaPoljaIAkcije);
-		double novaQVrednost = (1 - alfa) * getQVrednost(stanjeAkcija) + alfa * (nagrada + this.zanemarivanje*maksimumQVrednostSelektovanoPoljeAkcija.getqVrednost());
+		double staraQVrednost = getQVrednost(stanjeAkcija);
+		double novaQVrednost = (1 - alfa) * staraQVrednost + alfa * (nagrada + this.zanemarivanje*maksimumQVrednostSelektovanoPoljeAkcija.getqVrednost());
 
+		System.out.println("Stara qVrednost: " + staraQVrednost);
+		System.out.println("Nova qVrednst: " + novaQVrednost);
+		
 		this.qVrednosti.put(stanjeAkcija, novaQVrednost);
-		if(this.brojMenjanjaQVrednosti.containsKey(stanjeAkcija)) {
-			System.out.println("Izmenjeno brojMenjanjaQVrednosti!");
-		}
 		this.brojMenjanjaQVrednosti.put(stanjeAkcija, n+1);
+		System.out.println("Stari broj menjanja qVrednosti: " + n);
+		System.out.println("Novi broj menjanja qVrednosti: " + this.brojMenjanjaQVrednosti.get(stanjeAkcija));
 	}
 		
 	public QVrednostSelektovanoPoljeAkcija izracunajNajboljuAkcijuPoQvrednostima(Stanje stanje, ArrayList<PoljeAkcija> mogucaSelektovanaPoljaIAkcije) {
