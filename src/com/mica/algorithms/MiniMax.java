@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Random;
+import java.util.ResourceBundle.Control;
+
+import javax.swing.JEditorPane;
 
 import com.mica.main.Akcija;
 import com.mica.main.Akcije;
@@ -41,6 +44,15 @@ public class MiniMax {
 		this.igrac = igrac;
 	}
 
+	
+	public Igrac getProtivnik() {
+		return protivnik;
+	}
+
+	public void setProtivnik(Igrac protivnik) {
+		this.protivnik = protivnik;
+	}
+
 	public MiniMax() {
 	}
 
@@ -71,9 +83,11 @@ public class MiniMax {
 		String nazivAkcije = najboljaAkcija.name();
 		Polje novoPolje;
 		Polje selektovanoPolje;
+		Polje pojediPolje;
 
 		if (nazivAkcije.contains("POSTAVI")) {
 			selektovanoPolje = null;
+			pojediPolje = null;
 			novoPolje = akcijaSelektovanogPolja.getPolje();
 
 		} else {
@@ -81,14 +95,12 @@ public class MiniMax {
 			if (nazivAkcije.contains("SKOK")) {
 				int indeks = Integer.parseInt(nazivAkcije.split("_")[1]);
 				novoPolje = polja[indeks / Controller.BROJ_POLJA_U_KRUGU][indeks % Controller.BROJ_POLJA_U_KRUGU];
-
-			} else if (nazivAkcije.contains("POJEDI")) {
-				int indeks = Integer.parseInt(nazivAkcije.split("_")[1]);
-				novoPolje = polja[indeks / Controller.BROJ_POLJA_U_KRUGU][indeks % Controller.BROJ_POLJA_U_KRUGU];
+				pojediPolje = akcijaSelektovanogPolja.getJediPolje();
 			} else {
 				// povlacenje po tabli, gore, dole, levo i desno
 				Pozicija korak = Akcije.mapiranjeGDLDAkcijaNaKorake.get(najboljaAkcija);
 				novoPolje = akcijaSelektovanogPolja.getPolje();
+				pojediPolje = akcijaSelektovanogPolja.getJediPolje();
 				/*
 				 * int slojNovogPolja = selektovanoPolje.getPozicija().getX() +
 				 * korak.getX(); int indeksUNovomSloju =
@@ -110,7 +122,12 @@ public class MiniMax {
 					.getPozicija().getY()];
 		}
 
-		return new Potez(novoPolje, selektovanoPolje, najboljaAkcija);
+		if (pojediPolje != null) {
+			pojediPolje = trenutnoStanje.getPolja()[pojediPolje.getPozicija().getX()][pojediPolje.getPozicija().getY()];
+		}
+		Potez p = new Potez(novoPolje, selektovanoPolje, najboljaAkcija);
+		p.setPojediPolje(pojediPolje);
+		return p;
 	}
 
 	private void napraviSveMice(Polje[][] svaPolja) {
@@ -255,10 +272,14 @@ public class MiniMax {
 			// moramo da vratimo figuru na prethodnu poziciju
 			selektovanoPolje.setTipPolja(igrac.getTipIgraca());
 		}
-
+/*
 		// ako smo imali jedenje vratimo i figuru na poziciju sa koje smo je
 		// pojeli
-		
+		if (pa.isJedenje() == true) {
+			Polje pojedenoPolje = pa.getJediPolje();
+			pojedenoPolje.setTipPolja(protivnik.getTipIgraca());
+			pa.setJediPolje(pojedenoPolje);
+		}*/
 
 	}
 
@@ -286,6 +307,7 @@ public class MiniMax {
 
 					if (igrac.getTipIgraca() == igra.getTipIgraca()) {
 						// maksimizujemo igraca
+						this.protivnik = null;
 						minValue = Math.max(minValue,
 								alphBetaPruning(protivnik, pa, trenutnoStanje, dubina, minValue, maxValue));
 
@@ -504,30 +526,69 @@ public class MiniMax {
 				// zauzemo polje
 				p.setTipPolja(igrac.getTipIgraca());
 
-				/*
-				 * if (trenutnoStanje.isPojedi() == true) { // zahteva da
-				 * pojedemo protivnickog igraca // napravimo akciju za jedenje
-				 * figure Akcija pojediPolje = getAkcijaPojedi(a.getJediPolje(),
-				 * trenutnoStanje); if (pojediPolje != null) { PoljeAkcija
-				 * pojedi = new PoljeAkcija(a.getJediPolje(), pojediPolje);//
-				 * treba // na // osnovu // polja // izvuci // akciju // pojedi
-				 * // proveriKorak(trenutnoStanje, koraci, pojedi); }
-				 * 
-				 * a.getJediPolje().setTipPolja(TipPolja.ZUTO); }
-				 */
+				if (trenutnoStanje.daLiSuSveFigurePostavljene() == false) {
+					if (trenutnoStanje.getCrveniIgrac().getTipIgraca() == igrac.getTipIgraca()) {
+						trenutnoStanje.getCrveniIgrac().umanjiBrojNepostavljenihFigura();
+					} else {
+						trenutnoStanje.getPlaviIgrac().umanjiBrojNepostavljenihFigura();
+					}
+				} else {
+					Polje selektovanoP = a.getPrethodnoPolje();
+					selektovanoP.setTipPolja(TipPolja.ZUTO);
+					a.setPrethodnoPolje(selektovanoP);
+				}
+
+			/*	if (trenutnoStanje.isPojedi() == true) {
+					if (a.getJediPolje() != null) {
+						// treba da uzmemo polje koje
+						Polje pojedi = a.getJediPolje();
+						pojedi.setTipPolja(TipPolja.ZUTO);
+						a.setJediPolje(pojedi);
+						// smanjimo broj polja protivniku
+						if (trenutnoStanje.getCrveniIgrac().getTipIgraca() == igrac.getTipIgraca()) {
+							trenutnoStanje.getCrveniIgrac().umanjiBrojPreostalihFigura();
+						} else {
+							trenutnoStanje.getPlaviIgrac().umanjiBrojPreostalihFigura();
+						}
+					}
+				}*/
 
 				// izracunamo skor za potez
 				a.setScore(izracunaj(a, trenutnoStanje));
 
 				// vratimo potez
-				p.setTipPolja(TipPolja.ZUTO);
+			/*	p.setTipPolja(TipPolja.ZUTO);
+				if (trenutnoStanje.daLiSuSveFigurePostavljene() == false) {
+					if (trenutnoStanje.getCrveniIgrac().getTipIgraca() == igrac.getTipIgraca()) {
+						int brojPos = trenutnoStanje.getCrveniIgrac().getBrojNepostavljenihFigura();
+						trenutnoStanje.getCrveniIgrac().setBrojNepostavljenihFigura(brojPos++);
+					} else {
+						int brojPos = trenutnoStanje.getPlaviIgrac().getBrojNepostavljenihFigura();
+						trenutnoStanje.getPlaviIgrac().setBrojNepostavljenihFigura(brojPos++);
+					}
+				} else {
+					Polje selektovanoP = a.getPrethodnoPolje();
+					selektovanoP.setTipPolja(igrac.getTipIgraca());
+					a.setPrethodnoPolje(selektovanoP);
+					//vartimo i pojedenu figuru
+					Polje pojedeno = a.getJediPolje();
+					pojedeno.setTipPolja(protivnik.getTipIgraca());
+					a.setJediPolje(pojedeno);
+					//povecamo broj figura
+					int broj = protivnik.getBrojPreostalihFigura();
+					protivnik.setBrojPreostalihFigura(broj++);
+				}
+				
+				
 
+			}*/
 			}
 
 			if (igra.getTipIgraca() == igrac.getTipIgraca()) {
-				Collections.sort(koraci, new HeuristikaMaxPoredjenje());
-			} else {
 				Collections.sort(koraci, new HeuristikaMinPoredjenje());
+			} else {
+
+				Collections.sort(koraci, new HeuristikaMaxPoredjenje());
 			}
 		}
 
@@ -614,6 +675,7 @@ public class MiniMax {
 				// pravimo akciju skoka
 				Akcija akcijaSkoka = getAkcijaSkoka(slobodnaPolja.get(j));
 				PoljeAkcija pa = new PoljeAkcija(slobodnaPolja.get(j), akcijaSkoka);
+				pa.setPrethodnoPolje(p);
 				proveriKorak(trenutnoStanje, koraci, pa);
 				slobodnaPolja.get(j).setTipPolja(TipPolja.ZUTO);
 			}
@@ -623,8 +685,10 @@ public class MiniMax {
 	private Akcija getAkcijaSkoka(Polje polje) {
 		// na osnovu prosledjenog polja, vraca odgovarajucu akciju skoka na to
 		// polje
-		// treba izracunati indeks tog polja
-		return null;
+		// treba izracunati indeks tog polja 8*i + j
+		int indeks = 8 * polje.getPozicija().getX() + polje.getPozicija().getY();
+
+		return Akcije.SKOKOVI[indeks];
 	}
 
 	private ArrayList<Polje> getSlobodnaPolja(Stanje trenutnoStanje) {
@@ -821,22 +885,29 @@ public class MiniMax {
 			// proveravamo da li smo postavljanjem te figure napravili micu
 			if (brojFigura == 3 && selektovanoPolje) {
 				mica = true;
-				
-				 
+				// odredimo polje koje jedemo
+
+			/*	for (int m = 0; m < Controller.BROJ_KRUGOVA; m++) {
+					for (int k = 0; k < Controller.BROJ_POLJA_U_KRUGU; k++) {
+						if (trenutnoStanje.getPolja()[m][k].getTipPolja() == protivnik.getTipIgraca()) {
+							akcija.setJediPolje(trenutnoStanje.getPolja()[m][k]);
+							akcija.setJedenje(true);
+							koraci.add(akcija);
+						}
+					}
+				}*/
 			}
 			selektovanoPolje = false;
 		}
 
+		// ako nismo napravili micu dodamo korak
+		if (!mica)
 
-	// ako nismo napravili micu dodamo korak
-	if(!mica)
-
-	{
-		koraci.add(akcija);
-	}else
-	{
-		mica = false;
-	}
+		{
+			koraci.add(akcija);
+		} else {
+			mica = false;
+		}
 
 	}
 
@@ -860,121 +931,124 @@ public class MiniMax {
 			selektovanoPolje.setTipPolja(TipPolja.ZUTO);
 			pa.setPrethodnoPolje(selektovanoPolje);
 		}
-
-		
+/*
+		// ako ima jedenje moramo i njega odraditi
+		if (pa.isJedenje() == true) {
+			// polje za jedenje setujemo na zuto, tj da bude prazno
+			Polje pojedi = pa.getJediPolje();
+			pojedi.setTipPolja(TipPolja.ZUTO);
+			pa.setJediPolje(pojedi);
+		}*/
 
 	}
-	
-	public PoljeAkcija najboljaAkcijaZaJedenje(Stanje trenutnoStanje){
-		//1. proverimo da li su sve protivnicke figure u mici, ako jesu mozemo da jedemo bilo koju
-		ArrayList<PoljeAkcija> koraci = new ArrayList<PoljeAkcija>();
-		if(trenutnoStanje.daLiSuSvaProtivnickaPoljaUTari(protivnik.getTipIgraca()) == true){
-			//bilo koje polje moze da se pojede, prodjemo kroz sva i pogledamo koje nm daje najbolje performanse
-			for(int i =0; i < Controller.BROJ_KRUGOVA; i++){
-				for(int j =  0; j < Controller.BROJ_POLJA_U_KRUGU; j++){
-					//proverimo da li je polje od protivnika
-					if (trenutnoStanje.getPolja()[i][j].getTipPolja() == protivnik.getTipIgraca()){
-						PoljeAkcija pojedi = new PoljeAkcija(trenutnoStanje.getPolja()[i][j], getAkcijaPojedi(i,j));
-						koraci.add(pojedi);
-					}
-				}
-			}
-			
-			//svejedno koju cemo pojesti pa samo random izaberemo 
-			Random r = new Random();
-			return koraci.get(r.nextInt(koraci.size()));
-			
-		}else {
-			//uzmemo sva polja od protivnika i proveravamo koje je najbolje da pojedemo 
-			for(int i =0; i < Controller.BROJ_KRUGOVA; i++){
-				for(int j =  0; j < Controller.BROJ_POLJA_U_KRUGU; j++){
-					//proverimo da li je polje od protivnika
-					if (trenutnoStanje.getPolja()[i][j].getTipPolja() == protivnik.getTipIgraca()){
-						PoljeAkcija pojedi = new PoljeAkcija(trenutnoStanje.getPolja()[i][j], getAkcijaPojedi(i,j));
-						koraci.add(pojedi);
-					}
-				}
-			}
-			
-			for(PoljeAkcija pa : koraci){
-				//svaki korak proverimo i izracunamo vrednost za svaki 
-				int rez = izracunajScoreJedenja(pa);
-				if(pa.getScore() < rez){
-					pa.setScore(rez);
-				}
-			}
-			
-			Collections.sort(koraci, new HeuristikaMaxPoredjenje());
-			
-			return koraci.get(0);
-			
+	/*
+	 * public PoljeAkcija najboljaAkcijaZaJedenje(Stanje trenutnoStanje){ //1.
+	 * proverimo da li su sve protivnicke figure u mici, ako jesu mozemo da
+	 * jedemo bilo koju ArrayList<PoljeAkcija> koraci = new
+	 * ArrayList<PoljeAkcija>();
+	 * if(trenutnoStanje.daLiSuSvaProtivnickaPoljaUTari(protivnik.getTipIgraca()
+	 * ) == true){ //bilo koje polje moze da se pojede, prodjemo kroz sva i
+	 * pogledamo koje nm daje najbolje performanse for(int i =0; i <
+	 * Controller.BROJ_KRUGOVA; i++){ for(int j = 0; j <
+	 * Controller.BROJ_POLJA_U_KRUGU; j++){ //proverimo da li je polje od
+	 * protivnika if (trenutnoStanje.getPolja()[i][j].getTipPolja() ==
+	 * protivnik.getTipIgraca()){ PoljeAkcija pojedi = new
+	 * PoljeAkcija(trenutnoStanje.getPolja()[i][j], getAkcijaPojedi(i,j));
+	 * koraci.add(pojedi); } } }
+	 * 
+	 * //svejedno koju cemo pojesti pa samo random izaberemo Random r = new
+	 * Random(); return koraci.get(r.nextInt(koraci.size()));
+	 * 
+	 * }else { //uzmemo sva polja od protivnika i proveravamo koje je najbolje
+	 * da pojedemo for(int i =0; i < Controller.BROJ_KRUGOVA; i++){ for(int j =
+	 * 0; j < Controller.BROJ_POLJA_U_KRUGU; j++){ //proverimo da li je polje od
+	 * protivnika if (trenutnoStanje.getPolja()[i][j].getTipPolja() ==
+	 * protivnik.getTipIgraca()){ PoljeAkcija pojedi = new
+	 * PoljeAkcija(trenutnoStanje.getPolja()[i][j], getAkcijaPojedi(i,j));
+	 * koraci.add(pojedi); } } }
+	 * 
+	 * for(PoljeAkcija pa : koraci){ //svaki korak proverimo i izracunamo
+	 * vrednost za svaki int rez = izracunajScoreJedenja(pa); if(pa.getScore() <
+	 * rez){ pa.setScore(rez); } }
+	 * 
+	 * Collections.sort(koraci, new HeuristikaMaxPoredjenje());
+	 * 
+	 * return koraci.get(0);
+	 * 
+	 * }
+	 * 
+	 * 
+	 * }
+	 * 
+	 * private int izracunajScoreJedenja(PoljeAkcija pojedi){ int rezultat = 0;
+	 * int brojProtivnikovihFigura = 0; int brojMojihFigura = 0; int
+	 * brojSlobodnihFigura = 0;
+	 * 
+	 * for(int i =0 ; i < Controller.BROJ_MICA_KOMBINACIJA; i++){ //uzmemo jednu
+	 * kombinaciju Polje[] mica = micaKombinacije[i]; //prodjemo kroz nju i
+	 * vidimo da li se u njoj nalazi trazeno polje for(int j = 0; j<
+	 * Controller.BROJ_FIGURA_U_MICI; j++){ if(mica[j].getTipPolja() ==
+	 * igrac.getTipIgraca()){ brojMojihFigura++; }else
+	 * if(mica[j].getTipPolja()== protivnik.getTipIgraca()){
+	 * brojProtivnikovihFigura++; }else { brojSlobodnihFigura++; }
+	 * if(mica[j].getPozicija().getX() == pojedi.getPolje().getPozicija().getX()
+	 * && mica[j].getPozicija().getY() ==
+	 * pojedi.getPolje().getPozicija().getY()){ //u trazenoj mici je i polje za
+	 * brisanje //ako je polje tu onda pogledamo kakva su nam ostala polja if
+	 * (brojProtivnikovihFigura == 3){ //ne mozemo da jedemo figuru stavimo da
+	 * nam je skor minimalan rezultat = -100; }else if(brojProtivnikovihFigura
+	 * == 2 && brojMojihFigura == 1){ rezultat = 0; }else
+	 * if(brojProtivnikovihFigura == 2 && brojSlobodnihFigura == 1){ rezultat =
+	 * 50; }else if (brojProtivnikovihFigura ==1 && brojMojihFigura == 2){
+	 * rezultat = 50; } }
+	 * 
+	 * if(pojedi.getScore() < rezultat){ return rezultat; } } }
+	 * 
+	 * return 0;
+	 * 
+	 * }
+	 */
+	 public Potez noviPotezJediFiguru(Stanje trenutnoStanje2) { 
+		 // vraca potez	  za jedenje figure // trazimo figuru koju cemo da pojedemo 
+		 Stanje	 trenutnoStanje = new Stanje(trenutnoStanje2); Polje pojediPolje = null;
+	 
+	  PoljeAkcija najboljaAkcija = najboljaAkcijaZaJedenje(trenutnoStanje);
+	  Akcija akcija = najboljaAkcija.getAkcija();
+	  
+	  pojediPolje = najboljaAkcija.getPolje();
+	  
+	  
+	  if (pojediPolje != null) { pojediPolje =
+	  trenutnoStanje2.getPolja()[pojediPolje.getPozicija().getX()][pojediPolje.
+	  getPozicija().getY()]; }
+	  
+	  
+	  
+	  return new Potez(pojediPolje, pojediPolje, akcija); }
+
+	private PoljeAkcija najboljaAkcijaZaJedenje(Stanje trenutnoStanje) {
+		// biramo polje koje cemo da pojedemo
+		ArrayList<PoljeAkcija> koraci =  new ArrayList<PoljeAkcija>();
+		Polje[][] polja = trenutnoStanje.getPolja();
+		TipPolja protivnikPolje = null;
+		if(igrac.getTipIgraca() == TipPolja.CRVENO){
+			protivnikPolje = TipPolja.PLAVO;
+		}else{
+			protivnikPolje = TipPolja.CRVENO;
 		}
 		
-		
-	}
-	
-	private int izracunajScoreJedenja(PoljeAkcija pojedi){
-		int rezultat = 0;
-		int brojProtivnikovihFigura = 0;
-		int brojMojihFigura = 0;
-		int brojSlobodnihFigura = 0;
-		
-		for(int i =0 ; i < Controller.BROJ_MICA_KOMBINACIJA; i++){
-			//uzmemo jednu kombinaciju
-			Polje[] mica = micaKombinacije[i];
-			//prodjemo kroz nju i vidimo da li se u njoj nalazi trazeno polje
-			for(int j = 0; j< Controller.BROJ_FIGURA_U_MICI; j++){
-				if(mica[j].getTipPolja() == igrac.getTipIgraca()){
-					brojMojihFigura++;
-				}else if(mica[j].getTipPolja()== protivnik.getTipIgraca()){
-					brojProtivnikovihFigura++;
-				}else {
-					brojSlobodnihFigura++;
-				}
-				if(mica[j].getPozicija().getX() == pojedi.getPolje().getPozicija().getX() && mica[j].getPozicija().getY() == pojedi.getPolje().getPozicija().getY()){
-					//u trazenoj mici je i polje za brisanje 
-					//ako je polje tu onda pogledamo kakva su nam ostala polja
-					if (brojProtivnikovihFigura == 3){
-						//ne mozemo da jedemo figuru stavimo da nam je skor minimalan
-						rezultat = -100;
-					}else if(brojProtivnikovihFigura == 2 && brojMojihFigura == 1){
-						rezultat = 0;
-					}else if(brojProtivnikovihFigura ==  2 && brojSlobodnihFigura == 1){
-						rezultat = 50;
-					}else if (brojProtivnikovihFigura ==1 && brojMojihFigura == 2){
-						rezultat = 50;
-					}
-				}
-				
-				if(pojedi.getScore() < rezultat){
-					return rezultat;
+		for(int i = 0; i < Controller.BROJ_KRUGOVA; i++){
+			for(int j = 0 ; j < Controller.BROJ_POLJA_U_KRUGU; j++){
+				if(polja[i][j].getTipPolja() == protivnikPolje){
+					//ovo je polje kandidat za jedenje
+					koraci.add(new PoljeAkcija(polja[i][j], getAkcijaPojedi(i,j )));//akcija jedenje
 				}
 			}
 		}
 		
-		return 0;
+		Random r = new Random();
 		
+		return koraci.get(r.nextInt(koraci.size()));
 	}
-
-	public Potez noviPotezJediFiguru(Stanje trenutnoStanje2) {
-		// vraca potez za jedenje figure
-		// trazimo figuru koju cemo da pojedemo
-		Stanje trenutnoStanje = new Stanje(trenutnoStanje2);
-		Polje pojediPolje = null;
-		
-		PoljeAkcija najboljaAkcija = najboljaAkcijaZaJedenje(trenutnoStanje);
-		Akcija akcija = najboljaAkcija.getAkcija();
-		
-		pojediPolje = najboljaAkcija.getPolje();
-		
-		
-		if (pojediPolje != null) {
-			pojediPolje = trenutnoStanje2.getPolja()[pojediPolje.getPozicija().getX()][pojediPolje.getPozicija().getY()];
-		}
-
-		
-		
-		return new Potez(pojediPolje, pojediPolje, akcija);
-	}
-
+	 
 }

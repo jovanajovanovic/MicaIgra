@@ -4,6 +4,7 @@ public class Potez {
 	private Polje polje;
 	private Polje selektovanoPolje;
 	private Akcija akcija;
+	private Polje pojediPolje;
 	
 	public Potez(Polje polje, Polje selektovanoPolje, Akcija akcija) {
 		this.polje = polje;
@@ -35,4 +36,13 @@ public class Potez {
 		this.akcija = akcija;
 	}
 
+	public Polje getPojediPolje() {
+		return pojediPolje;
+	}
+
+	public void setPojediPolje(Polje pojediPolje) {
+		this.pojediPolje = pojediPolje;
+	}
+
+	
 }

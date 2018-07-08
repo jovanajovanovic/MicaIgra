@@ -5,6 +5,8 @@ public class PoljeAkcija {
 	private Akcija akcija;
 	private int score; 
 	private Polje prethodnoPolje;
+	private boolean jedenje;
+	private Polje jediPolje;
 	
 	
 	
@@ -45,6 +47,23 @@ public class PoljeAkcija {
 	public void setPrethodnoPolje(Polje prethodnoPolje) {
 		this.prethodnoPolje = prethodnoPolje;
 	}
+
+	public boolean isJedenje() {
+		return jedenje;
+	}
+
+	public void setJedenje(boolean jedenje) {
+		this.jedenje = jedenje;
+	}
+
+	public Polje getJediPolje() {
+		return jediPolje;
+	}
+
+	public void setJediPolje(Polje jediPolje) {
+		this.jediPolje = jediPolje;
+	}
+	
 	
 	
 	
