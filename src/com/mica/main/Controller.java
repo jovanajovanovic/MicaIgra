@@ -2,6 +2,7 @@ package com.mica.main;
 
 import javax.swing.JOptionPane;
 
+import com.mica.algorithms.MiniMax;
 import com.mica.algorithms.ReinforcementLearning;
 import com.mica.gui.GlavniProzor;
 import com.mica.gui.PomocniPanel;
@@ -11,6 +12,8 @@ public class Controller {
 	public static final int BROJ_KRUGOVA = 3;
 	public static final int BROJ_POLJA_U_KRUGU = 8;
 	public static final int BROJ_FIGURA = 9;
+	public static final int BROJ_MICA_KOMBINACIJA = 16;
+	public static final int BROJ_FIGURA_U_MICI = 3;
 
 	private boolean potezNapravljen = false;
 	
@@ -20,6 +23,8 @@ public class Controller {
 	private Stanje trenutnoStanje;
 	
 	private ReinforcementLearning reinforcementLearning;
+	
+	private MiniMax miniMaxAlgoritam;
 	
 	private boolean proveriKrajIgre;
 	
@@ -35,7 +40,7 @@ public class Controller {
 		
 		
 		this.reinforcementLearning = new ReinforcementLearning();
-		
+		this.miniMaxAlgoritam = new MiniMax();
 	}
 	
 	public void zapocniNovuIgru() {
@@ -53,7 +58,7 @@ public class Controller {
 				indeksPlavi = indeksi[0];
 				indeksCrveni = indeksi[1];
 				
-				if(indeksPlavi >= 2 || indeksCrveni >= 2) {
+				if(indeksPlavi >= 3 || indeksCrveni >= 3) {
 					JOptionPane.showMessageDialog(null, "Algoritam koji ste izabrali jos nije implementiran!", "Nije implementiran...", JOptionPane.ERROR_MESSAGE);;	
 				}
 				else {
@@ -73,7 +78,7 @@ public class Controller {
 				dialogPocetni(null);
 			}
 		}
-		while(indeksPlavi >= 2 || indeksCrveni >= 2);
+		while(indeksPlavi >= 3 || indeksCrveni >= 3);
 		
 		this.brojPoteza = 1;
 		if(algoritamPlavi != Algoritam.COVEK) boteOdigrajPotez(algoritamPlavi); 
@@ -141,8 +146,13 @@ public class Controller {
 			}
 			
 		} 
-		else {
-			// TODO
+		else if(algoritam == Algoritam.MINI_MAX){
+			// mini max algoritam 
+			Stanje staroStanje = new Stanje(trenutnoStanje);
+			double stariScore = staroStanje.getScore();
+			
+			Potez potez = odigrajPotezMiniMax(trenutnoStanje, true);
+			
 		}
 		
 		tabla.refresh();
@@ -211,6 +221,46 @@ public class Controller {
 			}
 		});
 		t.start();
+	}
+
+	private Potez odigrajPotezMiniMax(Stanje trenutnoStanje, boolean b) {
+		// mini max algoritam 
+		Igrac igra = null;
+		if(trenutnoStanje.getIgracNaPotezu() == TipPolja.PLAVO){
+			igra =  trenutnoStanje.getPlaviIgrac();
+		}else {
+			igra = trenutnoStanje.getCrveniIgrac();
+		}
+		this.miniMaxAlgoritam.setDubinaStabla(5);
+		this.miniMaxAlgoritam.setIgrac(igra);
+		Potez potez =  miniMaxAlgoritam.noviPotez(trenutnoStanje);
+		if(potez == null){return null;}
+		napraviPotez(trenutnoStanje, potez.getPolje(), potez.getSelektovanoPolje(), b);
+		
+		if(trenutnoStanje.isPojedi()){
+			pojediMinFiguru(trenutnoStanje, b);
+		}
+		
+		ispisiPotezNaKonzoli(potez);
+		return potez;
+	}
+
+	
+	
+	private void pojediMinFiguru(Stanje trenutnoStanje2, boolean b) {
+		//jedenje figure minimax algoritam 
+		
+		Potez potez = miniMaxAlgoritam.noviPotezJediFiguru(trenutnoStanje2);
+		if(potez != null) {	
+			Stanje staroStanje = new Stanje(trenutnoStanje2);
+			double stariScore = staroStanje.getScore();
+					
+			izvrsiJedenjeFigure(trenutnoStanje2, potez.getPolje(), b);
+			
+			ispisiPotezNaKonzoli(potez);
+			
+		}
+		
 	}
 
 	private Potez odigrajPotezIEventualnoPojediProtivnikovuFiguru(Stanje stanje, boolean azurirajPomocniPanel) {
