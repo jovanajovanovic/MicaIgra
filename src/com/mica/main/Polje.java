@@ -80,5 +80,9 @@ public class Polje {
 	public String toString() {
 		return "" + tipPolja.ordinal(); 
 	}
+	
+	public String mojToString() {
+		return "(" + pozicija + ", " + tipPolja.name() + ")";
+	}
 
 }

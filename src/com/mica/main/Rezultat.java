@@ -1,5 +1,7 @@
 package com.mica.main;
 
+import com.mica.algorithms.Algoritam;
+
 public class Rezultat {
 	private String pobednik;
 	private Algoritam algoritamPobednika;

@@ -4,6 +4,10 @@ public class StanjeAkcija {
 	private Stanje stanje;
 	private Akcija akcija;
 	
+	public StanjeAkcija() {
+		
+	}
+	
 	public StanjeAkcija(Stanje stanje, Akcija akcija) {
 		this.stanje = stanje;
 		this.akcija = akcija;

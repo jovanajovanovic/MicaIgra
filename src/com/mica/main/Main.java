@@ -5,13 +5,13 @@ import com.mica.gui.GlavniProzor;
 public class Main {
 
 	public static void main(String[] args) {
-		TipPolja igracNaPotezu = TipPolja.PLAVO;
-		Controller con = new Controller(igracNaPotezu);
-		GlavniProzor gp = new GlavniProzor(con);
-		gp.setVisible(true);
+		Controller controller = new Controller();
+		GlavniProzor glavniProzor = new GlavniProzor(controller);
+		controller.setGlavniProzor(glavniProzor);
+		glavniProzor.setVisible(true);
 		
-		//con.zapocniNovuIgru();
-		con.dialogPocetni(null);
+		//controller.zapocniNovuIgru();
+		glavniProzor.dialogPocetni(null);
 
 	}
 

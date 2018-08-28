@@ -1,12 +1,8 @@
 package com.mica.algorithms;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Random;
-import java.util.ResourceBundle.Control;
-
-import javax.swing.JEditorPane;
 
 import com.mica.main.Akcija;
 import com.mica.main.Akcije;
@@ -69,6 +65,7 @@ public class MiniMax {
 	}
 
 	public Potez noviPotez(Stanje trenutnoStanje) {
+		this.protivnik = null;
 		Stanje novoStanje = new Stanje(trenutnoStanje);
 		Polje[][] polja = trenutnoStanje.getPolja();
 		napraviSveMice(polja);
@@ -79,6 +76,11 @@ public class MiniMax {
 																						// vartiti
 																						// najbolju
 																						// akciju
+		//ako nam vrati null, onda nema najbolje akcije 
+		if(akcijaSelektovanogPolja == null){
+			return null;
+		}
+		
 		Akcija najboljaAkcija = akcijaSelektovanogPolja.getAkcija();
 		String nazivAkcije = najboljaAkcija.name();
 		Polje novoPolje;
@@ -251,7 +253,7 @@ public class MiniMax {
 			return najboljePolje;
 
 		} catch (Exception e) {
-
+			
 		}
 
 		return najboljePolje;
@@ -526,15 +528,9 @@ public class MiniMax {
 				// zauzemo polje
 				p.setTipPolja(igrac.getTipIgraca());
 
-				if (trenutnoStanje.daLiSuSveFigurePostavljene() == false) {
-					if (trenutnoStanje.getCrveniIgrac().getTipIgraca() == igrac.getTipIgraca()) {
-						trenutnoStanje.getCrveniIgrac().umanjiBrojNepostavljenihFigura();
-					} else {
-						trenutnoStanje.getPlaviIgrac().umanjiBrojNepostavljenihFigura();
-					}
-				} else {
+				if (trenutnoStanje.daLiSuSveFigurePostavljene() == true) {
 					Polje selektovanoP = a.getPrethodnoPolje();
-					selektovanoP.setTipPolja(TipPolja.ZUTO);
+					if(selektovanoP != null) selektovanoP.setTipPolja(TipPolja.ZUTO);
 					a.setPrethodnoPolje(selektovanoP);
 				}
 

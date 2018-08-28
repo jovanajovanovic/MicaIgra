@@ -1,18 +1,20 @@
 package com.mica.main;
 
+import com.mica.algorithms.Algoritam;
+
 public class Igrac {
 	private String name;
 	private TipPolja tipIgraca;
 	private int brojNepostavljenihFigura;
 	private int brojPreostalihFigura;
 	
-	private Polje selektovanoPolje = null;
+	//private Polje selektovanoPolje = null;
 	private Algoritam algoritam = null;
 	//private ArrayList<Integer> indeksiPolja;
 	//private int indeksSelektovanogPolja;
 	
-	public static final Algoritam[] algoritmi = { Algoritam.COVEK, Algoritam.RL, Algoritam.MINI_MAX };
-	public static final Algoritam[] algoritmiZaTrening = { Algoritam.RL, Algoritam.MINI_MAX };
+	public static final String[] algoritmi = { "ČOVEK", "RL", "MINI_MAX" };
+	public static final String[] algoritmiZaTrening = { "RL", "MINI_MAX" };
 	
 	public Igrac(String name, TipPolja tipIgraca, int brojNepostavljenihFigura, int brojPreostalihFigura) {	
 		this.name = name;
@@ -23,15 +25,15 @@ public class Igrac {
 		//this.indeksSelektovanogPolja = -1;
 	}
 	
-	public Igrac(String name, TipPolja tipIgraca, int brojNepostavljenihFigura, int brojPreostalihFigura, Polje selektovanoPolje) {	
+	/*public Igrac(String name, TipPolja tipIgraca, int brojNepostavljenihFigura, int brojPreostalihFigura, Polje selektovanoPolje) {	
 		this.name = name;
 		this.tipIgraca = tipIgraca;
 		this.brojNepostavljenihFigura = brojNepostavljenihFigura;
 		this.brojPreostalihFigura = brojPreostalihFigura;
 		//this.indeksiPolja = new ArrayList<Integer>();
 		//this.indeksSelektovanogPolja = -1;
-		this.selektovanoPolje = selektovanoPolje;
-	}
+		//this.selektovanoPolje = selektovanoPolje;
+	}*/
 	
 	/*public Igrac(String name, TipPolja tipIgraca, int brojNepostavljenihFigura, int brojPreostalihFigura, ArrayList<Integer> indeksiPolja, int indeksSelektovanogPolja) {	
 		this.name = name;
@@ -42,7 +44,7 @@ public class Igrac {
 		this.indeksSelektovanogPolja = indeksSelektovanogPolja;
 	}*/
 	
-	public Igrac(Igrac igrac, Polje[][] polja) {
+	public Igrac(Igrac igrac) {
 		this.name = igrac.name;
 		this.tipIgraca = igrac.tipIgraca;
 		this.brojNepostavljenihFigura = igrac.brojNepostavljenihFigura;
@@ -50,8 +52,8 @@ public class Igrac {
 		//this.indeksiPolja = new ArrayList<Integer>(igrac.indeksiPolja);
 		//this.indeksSelektovanogPolja = igrac.indeksSelektovanogPolja;
 		
-		if(igrac.selektovanoPolje == null) this.selektovanoPolje = null;
-		else this.selektovanoPolje = polja[igrac.selektovanoPolje.getPozicija().getX()][igrac.selektovanoPolje.getPozicija().getY()];
+		//if(igrac.selektovanoPolje == null) this.selektovanoPolje = null;
+		//else this.selektovanoPolje = polja[igrac.selektovanoPolje.getPozicija().getX()][igrac.selektovanoPolje.getPozicija().getY()];
 		
 		this.algoritam = igrac.algoritam;
 	}
@@ -66,14 +68,7 @@ public class Igrac {
 			Igrac igrac = new Igrac(tokeniIgrac[0].trim(), TipPolja.valueOf(tokeniIgrac[1].trim()), Integer.parseInt(tokeniIgrac[2].trim()), Integer.parseInt(tokeniIgrac[3].trim()), indeksiPolja, Integer.parseInt(tokeniIgrac[5].trim()));
 			*/
 			
-			String[] tokeniSelektovanoPolje = tokeniIgrac[4].trim().split(",");
-			int x = Integer.parseInt(tokeniSelektovanoPolje[0].trim());
-			int y = Integer.parseInt(tokeniSelektovanoPolje[1].trim());
-			Polje selektovanoPolje;
-			if(x == -1 && y == -1) selektovanoPolje = null;
-			else selektovanoPolje = polja[x][y];
-			
-			Igrac igrac = new Igrac(tokeniIgrac[0].trim(), TipPolja.values()[Integer.parseInt(tokeniIgrac[1].trim())], Integer.parseInt(tokeniIgrac[2].trim()), Integer.parseInt(tokeniIgrac[3].trim()), selektovanoPolje);
+			Igrac igrac = new Igrac(tokeniIgrac[0].trim(), TipPolja.values()[Integer.parseInt(tokeniIgrac[1].trim())], Integer.parseInt(tokeniIgrac[2].trim()), Integer.parseInt(tokeniIgrac[3].trim()));
 			return igrac;
 		}
 		catch(Exception e) {
@@ -121,20 +116,28 @@ public class Igrac {
 		this.brojPreostalihFigura = brojPreostalihFigura;
 	}
 	
-	public Polje getSelektovanoPolje() {
-		return selektovanoPolje;
-	}
-
-	public void setSelektovanoPolje(Polje selektovanoPolje) {
-		this.selektovanoPolje = selektovanoPolje;
-	}
-	
 	public Algoritam getAlgoritam() {
 		return algoritam;
 	}
 
 	public void setAlgoritam(Algoritam algoritam) {
 		this.algoritam = algoritam;
+	}
+	
+	public static Algoritam getEnumAlgoritam(String strAlgoritam) {
+		if(strAlgoritam.equals("ČOVEK")) {
+			return Algoritam.COVEK;
+		}
+		
+		return Algoritam.valueOf(strAlgoritam);
+	}
+	
+	public static String getStrAlgoritam(Algoritam algoritam) {
+		if(algoritam == Algoritam.COVEK) {
+			return "ČOVEK";
+		}
+		
+		return algoritam.name();
 	}
 
 	@Override
@@ -146,19 +149,12 @@ public class Igrac {
 		}*/
 		
 		StringBuilder sb = new StringBuilder("");
-		sb.append(name); sb.append(";"); sb.append(tipIgraca.ordinal()); sb.append(";"); sb.append(brojNepostavljenihFigura); 
-		sb.append(";"); sb.append(brojPreostalihFigura); 
+		sb.append(name); sb.append(";"); sb.append(tipIgraca.ordinal()); 
 		sb.append(";"); 
-		if(selektovanoPolje != null) {
-			sb.append(selektovanoPolje.getPozicija().getX()); 
-			sb.append(",");
-			sb.append(selektovanoPolje.getPozicija().getY());
-		}
-		else {
-			sb.append(-1); 
-			sb.append(",");
-			sb.append(-1);
-		}
+		sb.append(brojNepostavljenihFigura); 
+		sb.append(";"); 
+		sb.append(brojPreostalihFigura); 
+		
 		//sb.append(","); sb.append(sbPolja.toString().substring(1)); sb.append(","); sb.append(indeksSelektovanogPolja);
 		
 		return sb.toString();

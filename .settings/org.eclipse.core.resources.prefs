@@ -1,4 +1,8 @@
 eclipse.preferences.version=1
+encoding//src/com/mica/algorithms/Algoritam.java=UTF-8
+encoding//src/com/mica/algorithms/ReinforcementLearning.java=UTF-8
 encoding//src/com/mica/gui/GlavniProzor.java=UTF-8
+encoding//src/com/mica/gui/PomocniPanel.java=UTF-8
 encoding//src/com/mica/gui/Tabla.java=UTF-8
 encoding//src/com/mica/main/Controller.java=UTF-8
+encoding//src/com/mica/main/Igrac.java=UTF-8

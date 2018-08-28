@@ -9,6 +9,8 @@ public class Stanje {
 	private Igrac plaviIgrac;
 	private Igrac crveniIgrac;
 	
+	private Polje selektovanoPolje = null;
+	
 	private boolean pojedi;
 	
 	private double score;
@@ -20,8 +22,22 @@ public class Stanje {
 	
 	private final double konstantaZaKrajIgre = 1000;
 	
+	
 	public Stanje() {
+		polja = new Polje[Controller.BROJ_KRUGOVA][Controller.BROJ_POLJA_U_KRUGU];
 		
+		for (int i = 0; i < Controller.BROJ_KRUGOVA; i++) {
+			for (int j = 0; j < Controller.BROJ_POLJA_U_KRUGU; j++) { 
+				polja[i][j] = new Polje(i, j, TipPolja.ZUTO);;
+			}
+			
+		}
+		
+		this.plaviIgrac = new Igrac("Plavi", TipPolja.PLAVO, Controller.BROJ_FIGURA, Controller.BROJ_FIGURA);
+		this.crveniIgrac = new Igrac("Crveni", TipPolja.CRVENO, Controller.BROJ_FIGURA, Controller.BROJ_FIGURA);
+		this.pojedi = false;
+		
+		this.score = 0;
 	}
 	
 	public Stanje(TipPolja igracNaPotezu) {
@@ -43,11 +59,12 @@ public class Stanje {
 		this.score = 0;
 	}
 	
-	public Stanje(Polje[][] polja, TipPolja igracNaPotezu, Igrac plaviIgrac, Igrac crveniIgrac) {
+	public Stanje(Polje[][] polja, TipPolja igracNaPotezu, Igrac plaviIgrac, Igrac crveniIgrac, Polje selektovanoPolje) {
 		this.polja = polja;
 		this.igracNaPotezu = igracNaPotezu;
 		this.plaviIgrac = plaviIgrac;
 		this.crveniIgrac = crveniIgrac;
+		this.selektovanoPolje = selektovanoPolje;
 	}
 	
 	public Stanje(Stanje stanje) {
@@ -63,12 +80,18 @@ public class Stanje {
 		
 		this.polja = polja;
 		
-		this.plaviIgrac = new Igrac(stanje.plaviIgrac, polja);
-		this.crveniIgrac = new Igrac(stanje.crveniIgrac, polja);
+		this.plaviIgrac = new Igrac(stanje.plaviIgrac);
+		this.crveniIgrac = new Igrac(stanje.crveniIgrac);
 		
 		this.pojedi = stanje.pojedi;
 		
 		this.score = stanje.score;
+		
+		Polje selektovanoPolje = stanje.getSelektovanoPolje();
+		if(selektovanoPolje != null) {
+			this.selektovanoPolje = this.polja[selektovanoPolje.getPozicija().getX()][selektovanoPolje.getPozicija().getY()];
+		}
+		else this.selektovanoPolje = null;
 	}
 
 	public static Stanje kreirajStanje(String[] tokeniStanje) {
@@ -79,8 +102,6 @@ public class Stanje {
 		TipPolja igracNaPotezu;
 		
 		try {
-			if(tokeniStanje.length != 4) return null;
-			
 			tokeni = tokeniStanje[0].trim().split(";");
 			if(tokeni.length != 24) return null;
 			
@@ -93,18 +114,25 @@ public class Stanje {
 			}
 			
 			tokeniIgrac = tokeniStanje[1].trim().split(";");
-			if(tokeniIgrac.length != 5) return null;
+			if(tokeniIgrac.length != 4) return null;
 			plaviIgrac = Igrac.kreirajIgraca(tokeniIgrac, polja);
 			if(plaviIgrac == null) return null;
 			
 			tokeniIgrac = tokeniStanje[2].trim().split(";");
-			if(tokeniIgrac.length != 5) return null;
+			if(tokeniIgrac.length != 4) return null;
 			crveniIgrac = Igrac.kreirajIgraca(tokeniIgrac, polja);
 			if(crveniIgrac == null) return null;
 			
 			igracNaPotezu = TipPolja.values()[Integer.parseInt(tokeniStanje[3].trim())];
 			
-			return new Stanje(polja, igracNaPotezu, plaviIgrac, crveniIgrac);
+			String[] tokeniSelektovanoPolje = tokeniStanje[4].trim().split(",");
+			int x = Integer.parseInt(tokeniSelektovanoPolje[0].trim());
+			int y = Integer.parseInt(tokeniSelektovanoPolje[1].trim());
+			Polje selektovanoPolje;
+			if(x == -1 && y == -1) selektovanoPolje = null;
+			else selektovanoPolje = polja[x][y];
+			
+			return new Stanje(polja, igracNaPotezu, plaviIgrac, crveniIgrac, selektovanoPolje);
 		}
 		catch(Exception e) {
 			return null;
@@ -177,7 +205,7 @@ public class Stanje {
 			return null;
 		}
 		
-		if(plaviIgrac.getBrojNepostavljenihFigura() == Controller.BROJ_FIGURA && crveniIgrac.getBrojNepostavljenihFigura() == Controller.BROJ_FIGURA) {
+		if(!daLiSuSveFigurePostavljene()) {
 			return null;
 		}
 		
@@ -275,8 +303,30 @@ public class Stanje {
 	public void setScore(double score) {
 		this.score = score;
 	}
+	
+	public Polje getSelektovanoPolje() {
+		return selektovanoPolje;
+	}
 
-	public double izracunajScore() {
+	public void setSelektovanoPolje(Polje selektovanoPolje) {
+		this.selektovanoPolje = selektovanoPolje;
+	}
+	
+	public int krajIgreInt() {
+		Rezultat rezultat = krajIgre();
+		if(rezultat == null) return 0;
+		
+		String pobednik = rezultat.getPobednik();
+		pobednik = pobednik.substring(0, pobednik.length() -1) + "o";
+		
+		if(!igracNaPotezu.name().equalsIgnoreCase(pobednik)) { 
+			return -1;
+		}
+		
+		return 1;
+	}
+
+	public double izracunajScore(TipPolja igracNaPotezu) {
 		/*if(igracNaPotezu == TipPolja.PLAVO) {
 			return plaviIgrac.getBrojPreostalihFigura() + (Controller.BROJ_FIGURA - crveniIgrac.getBrojPreostalihFigura());
 		}
@@ -286,7 +336,14 @@ public class Stanje {
 		score = 0.0;
 		Rezultat rezultat = krajIgre();
 		if(rezultat == null) {
-			int plaviBrojTara = prebrojTare(TipPolja.PLAVO);
+			if(igracNaPotezu == TipPolja.PLAVO) {
+				score = crveniIgrac.getBrojPreostalihFigura() - plaviIgrac.getBrojPreostalihFigura();
+			}
+			else {
+				score = plaviIgrac.getBrojPreostalihFigura() - crveniIgrac.getBrojPreostalihFigura();
+			}
+			
+			/*int plaviBrojTara = prebrojTare(TipPolja.PLAVO);
 			int crveniBrojTara = prebrojTare(TipPolja.CRVENO); 
 			
 			int plaviBrojPoluTara = prebrojPoluTare(TipPolja.PLAVO);
@@ -301,13 +358,15 @@ public class Stanje {
 				score += crveniIgrac.getBrojPreostalihFigura() - plaviIgrac.getBrojPreostalihFigura();
 				score += konstantaZaMojeTare*crveniBrojTara - konstantaZaProtivnikoveTare*plaviBrojTara;
 				score += konstantaZaMojePoluTare*crveniBrojPoluTara - konstantaZaProtivnikovePoluTare*plaviBrojPoluTara;
-			}
+			}*/
+			
+			
 		}
 		else {
 			String pobednik = rezultat.getPobednik();
 			pobednik = pobednik.substring(0, pobednik.length() -1) + "o";
 		
-			if(igracNaPotezu.name().equalsIgnoreCase(pobednik)) {
+			if(!igracNaPotezu.name().equalsIgnoreCase(pobednik)) { // promenjen je igracNaPotezu, pobednik nije na potezu, vec je odigrao
 				score = konstantaZaKrajIgre;
 			}
 			else {
@@ -318,7 +377,7 @@ public class Stanje {
 		return score;
 	}
 	
-	private int prebrojTare(TipPolja tipPolja) {
+	public int prebrojTare(TipPolja tipPolja) {
 		int brojTara = 0;
 		
 		for (int i = 0; i < Controller.BROJ_KRUGOVA; i++) {
@@ -339,7 +398,7 @@ public class Stanje {
 		return brojTara;
 	}
 	
-	private int prebrojPoluTare(TipPolja tipPolja) {
+	public int prebrojPoluTare(TipPolja tipPolja) {
 		// polu tare == situacije u kojima su dve figure vec u redu,
 		// a treca moze biti stavljena u red vec u sledecem potezu
 		
@@ -434,6 +493,116 @@ public class Stanje {
 		return brojPoluTara;
 	}
 	
+	public int prebrojZiveTare(TipPolja tipPolja) {
+		int brojZivihTara = 0;
+		int prepravljenIndeksNakonOduzimanja, prepravljenIndeksNakonDodavanja;
+		
+		for (int i = 0; i < Controller.BROJ_KRUGOVA; i++) {
+			for (int j = 0; j < Controller.BROJ_POLJA_U_KRUGU; j+=2) {
+				prepravljenIndeksNakonOduzimanja = j-1;
+				if(prepravljenIndeksNakonOduzimanja == -1) prepravljenIndeksNakonOduzimanja = Controller.BROJ_POLJA_U_KRUGU-1;
+				
+				prepravljenIndeksNakonDodavanja = (j+3)%Controller.BROJ_POLJA_U_KRUGU;
+				
+				if(polja[i][j].getTipPolja() == tipPolja && polja[i][j+1].getTipPolja() == tipPolja 
+						&& polja[i][(j+2)%Controller.BROJ_POLJA_U_KRUGU].getTipPolja() == tipPolja) {
+					
+					if(polja[i][prepravljenIndeksNakonOduzimanja].getTipPolja() == TipPolja.ZUTO) {
+						if(i == 0) {
+							if(polja[i+1][prepravljenIndeksNakonOduzimanja].getTipPolja() == tipPolja 
+									&& polja[i+2][prepravljenIndeksNakonOduzimanja].getTipPolja() == tipPolja) {
+								brojZivihTara++;
+							}
+						}
+						else if(i == 1) {
+							if(polja[i-1][prepravljenIndeksNakonOduzimanja].getTipPolja() == tipPolja 
+									&& polja[i+1][prepravljenIndeksNakonOduzimanja].getTipPolja() == tipPolja) {
+								brojZivihTara++;
+							}
+						}
+						else if(i == 2) {
+							if(polja[i-1][prepravljenIndeksNakonOduzimanja].getTipPolja() == tipPolja 
+									&& polja[i-2][prepravljenIndeksNakonOduzimanja].getTipPolja() == tipPolja) {
+								brojZivihTara++;
+							}
+						}
+					}
+					
+					if(polja[i][prepravljenIndeksNakonDodavanja].getTipPolja() == TipPolja.ZUTO) {
+						if(i == 0) {
+							if(polja[i+1][prepravljenIndeksNakonDodavanja].getTipPolja() == tipPolja 
+									&& polja[i+2][prepravljenIndeksNakonDodavanja].getTipPolja() == tipPolja) {
+								brojZivihTara++;
+							}
+						}
+						else if(i == 1) {
+							if(polja[i-1][prepravljenIndeksNakonDodavanja].getTipPolja() == tipPolja 
+									&& polja[i+1][prepravljenIndeksNakonDodavanja].getTipPolja() == tipPolja) {
+								brojZivihTara++;
+							}
+						}
+						else if(i == 2) {
+							if(polja[i-1][prepravljenIndeksNakonDodavanja].getTipPolja() == tipPolja 
+									&& polja[i-2][prepravljenIndeksNakonDodavanja].getTipPolja() == tipPolja) {
+								brojZivihTara++;
+							}
+						}
+					}
+					
+					if(i == 0) {
+						if(polja[i+1][j].getTipPolja() == tipPolja && polja[i+1][j+1].getTipPolja() == TipPolja.ZUTO 
+								&& polja[i+1][(j+2)%Controller.BROJ_POLJA_U_KRUGU].getTipPolja() == tipPolja) {
+							brojZivihTara++;
+						}
+					}
+					else if(i == 1) {
+						if(polja[i-1][j].getTipPolja() == tipPolja && polja[i-1][j+1].getTipPolja() == TipPolja.ZUTO 
+								&& polja[i-1][(j+2)%Controller.BROJ_POLJA_U_KRUGU].getTipPolja() == tipPolja) {
+							brojZivihTara++;
+						}
+						
+						if(polja[i+1][j].getTipPolja() == tipPolja && polja[i+1][j+1].getTipPolja() == TipPolja.ZUTO 
+								&& polja[i+1][(j+2)%Controller.BROJ_POLJA_U_KRUGU].getTipPolja() == tipPolja) {
+							brojZivihTara++;
+						}
+					}
+					else if(i == 2) {
+						if(polja[i-1][j].getTipPolja() == tipPolja && polja[i-1][j+1].getTipPolja() == TipPolja.ZUTO 
+								&& polja[i-1][(j+2)%Controller.BROJ_POLJA_U_KRUGU].getTipPolja() == tipPolja) {
+							brojZivihTara++;
+						}
+					}
+					
+				}
+				else if(polja[i][j].getTipPolja() == TipPolja.ZUTO && polja[i][j+1].getTipPolja() == tipPolja 
+						&& polja[i][(j+2)%Controller.BROJ_POLJA_U_KRUGU].getTipPolja() == tipPolja) {
+					if(polja[0][prepravljenIndeksNakonOduzimanja].getTipPolja() == tipPolja 
+							&& polja[1][prepravljenIndeksNakonOduzimanja].getTipPolja() == tipPolja
+							&& polja[2][prepravljenIndeksNakonOduzimanja].getTipPolja() == tipPolja) {
+						brojZivihTara++;
+					}
+				}
+				
+				else if(polja[i][j].getTipPolja() == tipPolja && polja[i][j+1].getTipPolja() == tipPolja 
+						&& polja[i][(j+2)%Controller.BROJ_POLJA_U_KRUGU].getTipPolja() == TipPolja.ZUTO) {
+					if(polja[0][prepravljenIndeksNakonDodavanja].getTipPolja() == tipPolja  
+							&& polja[1][prepravljenIndeksNakonDodavanja].getTipPolja() == tipPolja
+							&& polja[2][prepravljenIndeksNakonDodavanja].getTipPolja() == tipPolja) {
+						brojZivihTara++;
+					}
+				}
+			}
+		}
+		
+		for (int k = 1; k < Controller.BROJ_POLJA_U_KRUGU; k+=2) {
+			if(polja[0][k].getTipPolja() == tipPolja && polja[1][k].getTipPolja() == tipPolja && polja[2][k].getTipPolja() == tipPolja) {
+				brojZivihTara++;
+			}
+		}
+		
+		return brojZivihTara;
+	}
+	
 	public boolean daLiSuSvaProtivnickaPoljaUTari(TipPolja tipPoljaZaJedenje) {
 		for (int i = 0; i < Controller.BROJ_KRUGOVA; i++) {
 			for (int j = 0; j < Controller.BROJ_POLJA_U_KRUGU; j++) {
@@ -498,25 +667,25 @@ public class Stanje {
 				polja[i][indeks2].setDaLiJeUTari(pomDaLiJeUTari);
 				
 				if(josNijePromenjenoPlavoSelektovanoPolje) {
-					josNijePromenjenoPlavoSelektovanoPolje = !promeniSelektovanoPolje(plaviIgrac, polja, i, indeks1, indeks2);
+					josNijePromenjenoPlavoSelektovanoPolje = !promeniSelektovanoPolje(polja, i, indeks1, indeks2);
 				}
 				
 				if(josNijePromenjenoCrvenoSelektovanoPolje) {
-					josNijePromenjenoCrvenoSelektovanoPolje = !promeniSelektovanoPolje(plaviIgrac, polja, i, indeks1, indeks2);
+					josNijePromenjenoCrvenoSelektovanoPolje = !promeniSelektovanoPolje(polja, i, indeks1, indeks2);
 				}
 			}
 		}
 	}
 	
-	private boolean promeniSelektovanoPolje(Igrac igrac, Polje[][] polja, int x, int indeks1, int indeks2) {
-		if(igrac.getSelektovanoPolje() != null) {
-			if(igrac.getSelektovanoPolje().getPozicija().getX() == x) {
-				if(igrac.getSelektovanoPolje().getPozicija().getY() == indeks1) {
-					igrac.setSelektovanoPolje(polja[x][indeks2]);
+	private boolean promeniSelektovanoPolje(Polje[][] polja, int x, int indeks1, int indeks2) {
+		if(selektovanoPolje != null) {
+			if(selektovanoPolje.getPozicija().getX() == x) {
+				if(selektovanoPolje.getPozicija().getY() == indeks1) {
+					selektovanoPolje = polja[x][indeks2];
 					return true;
 				}
-				else if(igrac.getSelektovanoPolje().getPozicija().getY() == indeks2) {
-					igrac.setSelektovanoPolje(polja[x][indeks1]);
+				else if(selektovanoPolje.getPozicija().getY() == indeks2) {
+					selektovanoPolje = polja[x][indeks1];
 					return true;
 				}
 			}
@@ -563,8 +732,17 @@ public class Stanje {
 		StringBuilder sb = new StringBuilder("");
 		sb.append(sbPolja.toString().substring(1));
 		sb.append(":"); sb.append(plaviIgrac); sb.append(":"); sb.append(crveniIgrac);
-		sb.append(":"); sb.append(igracNaPotezu.ordinal());
-		
+		sb.append(":"); sb.append(igracNaPotezu.ordinal()); sb.append(":");
+		if(selektovanoPolje != null) {
+			sb.append(selektovanoPolje.getPozicija().getX()); 
+			sb.append(",");
+			sb.append(selektovanoPolje.getPozicija().getY());
+		}
+		else {
+			sb.append(-1); 
+			sb.append(",");
+			sb.append(-1);
+		}
 		
 		return sb.toString();
 	}
